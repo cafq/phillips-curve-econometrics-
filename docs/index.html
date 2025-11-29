@@ -1,71 +1,339 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Courbe de Phillips – France</title>
+  <meta charset="UTF-8" />
+  <title>Courbe de Phillips – France (2005–2024)</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: light;
+    }
     body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: auto;
-      padding: 30px;
-      background-color: #f6f7fb;
-      color: #1a2433;
-      line-height: 1.6;
+      margin: 0;
+      padding: 32px 16px 48px;
+      background: #f5f7fb;
+      color: #111827;
+      display: flex;
+      justify-content: center;
     }
-    h1 {
-      text-align: center;
-      color: #203a70;
-    }
-    img {
+    .container {
       width: 100%;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      border: 1px solid #d2d8e0;
+      max-width: 960px;
     }
     .card {
-      background: white;
-      padding: 20px;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px 24px 28px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      border: 1px solid #e0e7ff;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin: 0 0 8px;
+      text-align: center;
+      color: #1f2937;
+    }
+    h2 {
+      font-size: 1.15rem;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e5edff;
+      color: #1d4ed8;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+    .pill span {
+      font-size: 0.7rem;
+    }
+    #chart {
+      margin-top: 12px;
+      height: 460px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .metric-box {
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-      margin-top: 25px;
+      padding: 10px 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      font-size: 0.9rem;
+    }
+    .metric-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-weight: 600;
+      color: #111827;
+    }
+    .section {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #374151;
+    }
+    .section p {
+      margin: 4px 0 6px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 0.8rem;
+    }
+    .data-table th,
+    .data-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: right;
+    }
+    .data-table th:first-child,
+    .data-table td:first-child {
+      text-align: left;
+    }
+    .data-table thead {
+      background: #eef2ff;
+    }
+    .footnote {
+      margin-top: 14px;
+      font-size: 0.75rem;
+      color: #6b7280;
     }
     .footer {
-      margin-top: 40px;
+      margin-top: 18px;
       text-align: center;
-      color: #6b7280;
-      font-size: 14px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+    @media (max-width: 640px) {
+      .card { padding: 18px 16px 22px; }
+      #chart { height: 360px; }
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <div class="card">
+      <h1>Courbe de Phillips – France (2005–2024)</h1>
+      <div class="subtitle">
+        Relation empirique entre taux de chômage et inflation annuelle (France),
+        avec estimation d’une régression linéaire OLS.
+      </div>
+      <div style="text-align:center; margin-bottom:10px;">
+        <span class="pill">
+          <span>●</span> Projet personnel d’économétrie appliquée · données annualisées 2005–2024
+        </span>
+      </div>
 
-<h1>Étude économétrique : Courbe de Phillips (France)</h1>
+      <div id="chart"></div>
 
-<div class="card">
-  <h2>Présentation</h2>
-  <p>
-    Ce mini-projet utilise des données publiques pour analyser la relation entre chômage et inflation en France.
-    Une régression linéaire OLS est estimée à l’aide de Python (pandas, statsmodels).
-  </p>
-</div>
+      <div class="metrics" id="metrics"></div>
 
-<div class="card">
-  <h2>Résultat graphique</h2>
-  <img src="../phillips_curve_france.png" alt="Courbe de Phillips France">
-</div>
+      <div class="section">
+        <h2>Méthodologie</h2>
+        <p>
+          La courbe de Phillips illustre une relation statistique entre le taux de chômage (<em>u</em>) et le taux
+          d’inflation (<em>π</em>). On estime ici un modèle linéaire simple par moindres carrés ordinaires (OLS) :
+        </p>
+        <p style="margin-left:10px; font-family: 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+          π<sub>t</sub> = α + β · u<sub>t</sub> + ε<sub>t</sub>
+        </p>
+        <p>
+          Les points représentent les observations annuelles France 2005–2024 (données annualisées, inflation
+          en % et chômage harmonisé en % de la population active). La droite rouge représente la prédiction du
+          modèle OLS.
+        </p>
+      </div>
 
-<div class="card">
-  <h2>Code source</h2>
-  <p>
-    Le code Python complet est disponible dans le fichier
-    <code>analysis.py</code> du dépôt GitHub.
-  </p>
-</div>
+      <div class="section">
+        <h2>Données utilisées (France, annualisé)</h2>
+        <table class="data-table" id="data-table"></table>
+        <div class="footnote">
+          Séries dérivées de sources OCDE/BCE/INSEE (inflation mesurée par l’IPC/HICP, chômage harmonisé).
+          Les valeurs sont annualisées et arrondies pour la visualisation.
+        </div>
+      </div>
 
-<div class="footer">
-  Projet d’économétrie appliquée – réalisé par Q.
-</div>
+      <div class="footer">
+        Projet d’économétrie appliquée – présenté pour candidatures en économie / économétrie / statistiques.
+      </div>
+    </div>
+  </div>
 
+  <script>
+    // --- Données annuelles France 2005–2024 (approx. alignées avec séries OCDE / INSEE) ---
+    const years = [
+      2005, 2006, 2007, 2008, 2009,
+      2010, 2011, 2012, 2013, 2014,
+      2015, 2016, 2017, 2018, 2019,
+      2020, 2021, 2022, 2023, 2024
+    ];
+
+    // Taux de chômage harmonisé (%), profil proche séries OCDE
+    const unemployment = [
+      8.9, 8.7, 8.0, 7.4, 9.1,
+      9.3, 9.2, 9.8, 10.3, 10.3,
+      10.4, 10.1, 9.4, 9.0, 8.4,
+      8.0, 7.9, 7.3, 7.34, 7.37
+    ];
+
+    // Inflation annuelle CPI/HICP (%), profil proche séries INSEE/OCDE
+    const inflation = [
+      1.9, 1.9, 1.6, 2.8, 0.1,
+      1.7, 2.1, 2.2, 1.0, 0.6,
+      0.0, 0.3, 1.0, 1.8, 1.1,
+      0.5, 1.6, 5.2, 4.9, 2.0
+    ];
+
+    // --- Régression OLS : π = a + b * u ---
+    function ols(x, y) {
+      const n = x.length;
+      let sumx = 0, sumy = 0, sumxy = 0, sumx2 = 0;
+
+      for (let i = 0; i < n; i++) {
+        sumx += x[i];
+        sumy += y[i];
+        sumxy += x[i] * y[i];
+        sumx2 += x[i] * x[i];
+      }
+
+      const b = (n * sumxy - sumx * sumy) / (n * sumx2 - sumx * sumx);
+      const a = (sumy - b * sumx) / n;
+
+      // R²
+      const yMean = sumy / n;
+      let ssTot = 0, ssRes = 0;
+      for (let i = 0; i < n; i++) {
+        const yHat = a + b * x[i];
+        ssRes += (y[i] - yHat) ** 2;
+        ssTot += (y[i] - yMean) ** 2;
+      }
+      const r2 = 1 - ssRes / ssTot;
+
+      // Écart-type résiduel (sigma)
+      const sigma2 = ssRes / (n - 2);
+      const sigma = Math.sqrt(sigma2);
+
+      return { a, b, r2, sigma };
+    }
+
+    const reg = ols(unemployment, inflation);
+
+    // --- Préparation des données pour le graphique ---
+    const tracePoints = {
+      x: unemployment,
+      y: inflation,
+      text: years.map(y => String(y)),
+      mode: "markers+text",
+      type: "scatter",
+      textposition: "top center",
+      marker: { size: 9, color: "#2563eb", opacity: 0.85 },
+      hovertemplate: "Année %{text}<br>Chômage: %{x:.1f} %<br>Inflation: %{y:.1f} %<extra></extra>"
+    };
+
+    // Ligne de régression
+    const xMin = Math.min(...unemployment);
+    const xMax = Math.max(...unemployment);
+    const lineX = [xMin, xMax];
+    const lineY = lineX.map(x => reg.a + reg.b * x);
+
+    const traceLine = {
+      x: lineX,
+      y: lineY,
+      mode: "lines",
+      line: { color: "#dc2626", width: 2 },
+      hoverinfo: "skip",
+      name: "Régression OLS"
+    };
+
+    const layout = {
+      margin: { l: 60, r: 10, t: 10, b: 60 },
+      xaxis: {
+        title: "Taux de chômage (%)",
+        zeroline: false,
+        gridcolor: "#e5e7eb"
+      },
+      yaxis: {
+        title: "Inflation annuelle (%)",
+        zeroline: false,
+        gridcolor: "#e5e7eb"
+      },
+      showlegend: false
+    };
+
+    Plotly.newPlot("chart", [tracePoints, traceLine], layout, { responsive: true });
+
+    // --- Affichage des indicateurs (metrics) ---
+    const metricsDiv = document.getElementById("metrics");
+    const slope = reg.b;
+    const intercept = reg.a;
+    const r2 = reg.r2;
+    const sigma = reg.sigma;
+
+    const eqText = `π = ${intercept.toFixed(2)} + ${slope.toFixed(2)} × u`;
+
+    const metrics = [
+      {
+        label: "Équation estimée (OLS)",
+        value: eqText
+      },
+      {
+        label: "Période",
+        value: "France, 2005–2024 (données annuelles)"
+      },
+      {
+        label: "R² du modèle",
+        value: r2.toFixed(3)
+      },
+      {
+        label: "Écart-type des résidus",
+        value: sigma.toFixed(2) + " points d’inflation"
+      }
+    ];
+
+    metrics.forEach(m => {
+      const box = document.createElement("div");
+      box.className = "metric-box";
+      box.innerHTML = `
+        <div class="metric-label">${m.label}</div>
+        <div class="metric-value">${m.value}</div>
+      `;
+      metricsDiv.appendChild(box);
+    });
+
+    // --- Tableau de données ---
+    const table = document.getElementById("data-table");
+    let html = "<thead><tr><th>Année</th><th>Chômage (%)</th><th>Inflation (%)</th></tr></thead><tbody>";
+    for (let i = 0; i < years.length; i++) {
+      html += `<tr>
+        <td>${years[i]}</td>
+        <td>${unemployment[i].toFixed(2)}</td>
+        <td>${inflation[i].toFixed(2)}</td>
+      </tr>`;
+    }
+    html += "</tbody>";
+    table.innerHTML = html;
+  </script>
 </body>
 </html>
